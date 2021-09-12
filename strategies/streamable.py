@@ -1,4 +1,4 @@
-from controllers.streamable import StreamableController
+from controllers import StreamableController
 from uuid import uuid4
 
 import re

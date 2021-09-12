@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from strategies.streamable import StreamableDownloadStrategy
+from strategies import StreamableDownloadStrategy
 from controllers import RedditController
 from exceptions import InvalidQueryException
 
