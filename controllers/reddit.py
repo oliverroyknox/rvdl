@@ -9,6 +9,19 @@ class RedditController():
         self.subreddit_rx = re.compile(r"^[A-Za-z0-9]+(?:[_-][A-Za-z0-9]+)*$")
         self.r_slash_rx = re.compile(r"^(r\/)")
 
+    def process_post(self, post):
+        response = requests.get(
+            url=f"{post}.json", 
+            headers={ "User-Agent": "rvdl", "Content-Type": "application/json" }
+        )
+        
+        json = response.json()
+
+        if not response.ok:
+            raise InvalidQueryException(f"{json['message'] + ''.lower()}; request failed.")
+
+        return json
+
     def process_subreddit(self, subreddit, filter, limit):
         subreddit = re.sub(self.r_slash_rx, "", subreddit) # common practice is to preceed a subreddit name with "r/", we remove this before validating to possibly accept this value. 
 
@@ -27,7 +40,9 @@ class RedditController():
             headers={ "User-Agent": "rvdl", "Content-Type": "application/json" }
         )
 
-        return response.json()
+        json = response.json()
 
+        if not response.ok:
+            raise InvalidQueryException(f"{json['message'] + ''.lower()}; request failed.")
 
-
+        return json
