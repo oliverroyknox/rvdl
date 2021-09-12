@@ -14,34 +14,67 @@ def start():
     rc = RedditController()
 
     try:
-        listing = rc.process_subreddit("formula1", "hot", 100)
+        # data = use_subreddit(rc, "r/formula1", "hot", 50)
+        data = use_post(rc, "https://www.reddit.com/r/formula1/comments/pmuxvu/george_russell_noticing_daniel_riccardo/")
 
+        for datum in data:
+            download(datum)
+
+    except InvalidQueryException as e:
+        print(e)
+
+    except Exception as e:
+        print(e)
+
+def use_post(rc, post):
+    listings = rc.process_post(post)
+
+    if len(listings) < 1:
+        return
+
+    children = listings[0]["data"]["children"]  # Assert first listing holds post data, subsequent listings are comments in the thread.
+
+    if len(children) == 1:
+        data = children[0]["data"]  # Assert there is only one child returned from api when querying a single post.
+
+        if data is None:    # No post available
+            return
+        else: 
+            return [ data ]
+    
+    else:
+        return
+
+def use_subreddit(rc, subreddit, filter, limit):
+        output = []
+
+        listing = rc.process_subreddit(subreddit, filter, limit)
         children = listing["data"]["children"]
 
         if len(children) > 0:
-
             for child in children:
                 data = child["data"]
 
                 if data is None:    # No post available
                     continue
-
-                strategy = hostDownloadTable.get(data["domain"])
-
-                if strategy is None:    # Host is not supported for download
-                    continue
-                
-                try:
-                    file_name = strategy.download(data["url"])
-                    print(f"file name: {file_name}")
-                except Exception as e:
-                    print(e)
-            
+                else:
+                    output.append(data)
         else:
-            print("No posts found in subreddit.")
+            return
 
-    except InvalidQueryException as e:
-        print(e)
+        return output
+
+def download(data):
+        if data is None:    # No post available
+            return
+
+        strategy = hostDownloadTable.get(data["domain"])
+
+        if strategy is None:    # Host is not supported for download
+            return
+        
+        file_name = strategy.download(data["url"])
+        print(f"file name: {file_name}")
 
 if __name__ == "__main__":
     start()
