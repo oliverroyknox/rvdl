@@ -3,28 +3,40 @@ from strategies import StreamableDownloadStrategy
 from controllers import RedditController
 from exceptions import InvalidQueryException
 
-hostDownloadTable = {
-    "streamable.com": StreamableDownloadStrategy("videos"),
-    "streamwo.com": None
-}
+import argparse
 
 def start():
-    print("Starting RVDL...")
+    parser = argparse.ArgumentParser(description="Download videos from Reddit.")
+    subparsers = parser.add_subparsers(dest="command")
+
+    # download a video
+    get = subparsers.add_parser("get")
+    get.add_argument("url", metavar="U", type=str, help="The url of the post to download video from.")
+    get.add_argument("--output", "-o", type=str, default="./", help="The output directory of the video.")
+    
+    # download videos in subreddit
+    gets = subparsers.add_parser("gets")
+    gets.add_argument("name", metavar="S", type=str, help="The subreddit to download video(s) from.")
+    gets.add_argument("--filter", "-f", type=str, default="hot", help="The filtering option for a subreddit.")
+    gets.add_argument("--output", "-o", type=str, default="./", help="The output directory of the video(s).")
+
+    args = parser.parse_args()
 
     rc = RedditController()
+    data = []
 
-    try:
-        # data = use_subreddit(rc, "r/formula1", "hot", 50)
-        data = use_post(rc, "https://www.reddit.com/r/formula1/comments/pmuxvu/george_russell_noticing_daniel_riccardo/")
+    if args.command == "get":
+        data = use_post(rc, args.url)
+    elif args.command == "gets":
+        data = use_subreddit(rc, args.name, args.filter, 100)
+ 
+    hostDownloadTable = {
+        "streamable.com": StreamableDownloadStrategy(args.output),
+        "streamwo.com": None
+    }
 
-        for datum in data:
-            download(datum)
-
-    except InvalidQueryException as e:
-        print(e)
-
-    except Exception as e:
-        print(e)
+    for datum in data:
+        download(datum, hostDownloadTable)
 
 def use_post(rc, post):
     listings = rc.process_post(post)
@@ -64,7 +76,7 @@ def use_subreddit(rc, subreddit, filter, limit):
 
         return output
 
-def download(data):
+def download(data, hostDownloadTable):
         if data is None:    # No post available
             return
 
@@ -77,4 +89,9 @@ def download(data):
         print(f"file name: {file_name}")
 
 if __name__ == "__main__":
-    start()
+    try:
+        start()
+    except InvalidQueryException as e:
+        print(e)
+    except Exception as e:
+        print(e)
