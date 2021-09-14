@@ -2,6 +2,8 @@
 from strategies import StreamableDownloadStrategy
 from controllers import RedditController
 from exceptions import InvalidQueryException
+from workers import DownloadWorker
+from queue import Queue
 
 import argparse
 
@@ -31,13 +33,28 @@ def start():
         elif args.command == "gets":
             data = use_subreddit(rc, args.name, args.filter, 100)
     
-        hostDownloadTable = {
+        hs_table = {
             "streamable.com": StreamableDownloadStrategy(args.output),
             "streamwo.com": None
         }
 
+        queue = Queue()
+
+        # spin up threads
+        for _ in range(16):
+            worker = DownloadWorker(queue, hs_table)
+            worker.daemon = True
+            worker.start()
+
+        # load valid data into queue
         for datum in data:
-            download(datum, hostDownloadTable)
+            if datum is None:
+                continue
+            
+            queue.put((datum["domain"], datum["url"]))
+
+        # wait for queue to be processed.
+        queue.join()
 
     except InvalidQueryException as e:
         print(e)
@@ -82,18 +99,6 @@ def use_subreddit(rc, subreddit, filter, limit):
             return
 
         return output
-
-def download(data, hostDownloadTable):
-        if data is None:    # No post available
-            return
-
-        strategy = hostDownloadTable.get(data["domain"])
-
-        if strategy is None:    # Host is not supported for download
-            return
-        
-        file_name = strategy.download(data["url"])
-        print(f"file name: {file_name}")
 
 if __name__ == "__main__":
     start()
