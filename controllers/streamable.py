@@ -19,4 +19,7 @@ class StreamableController():
             headers={ "User-Agent": "rvdl", "Content-Type": "application/json" }
         )
 
+        if not response.ok:
+            raise InvalidQueryException(f"request failed with error code {response.status_code}; the reason is {response.reason}.")
+
         return response.json()

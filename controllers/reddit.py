@@ -40,9 +40,7 @@ class RedditController():
             headers={ "User-Agent": "rvdl", "Content-Type": "application/json" }
         )
 
-        json = response.json()
-
         if not response.ok:
-            raise InvalidQueryException(f"{json['message'] + ''.lower()}; request failed.")
+            raise InvalidQueryException(f"request failed with error code {response.status_code}; the reason is {response.reason}.")
 
-        return json
+        return response.json()
