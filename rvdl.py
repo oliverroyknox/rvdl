@@ -15,13 +15,13 @@ def start():
         # download a video
         get = subparsers.add_parser("get")
         get.add_argument("url", metavar="U", type=str, help="The url of the post to download video from.")
-        get.add_argument("--output", "-o", type=str, default="./", help="The output directory of the video.")
+        get.add_argument("-o", "--output", type=str, default="./", help="The output directory of the video.")
         
         # download videos in subreddit
         gets = subparsers.add_parser("gets")
         gets.add_argument("name", metavar="S", type=str, help="The subreddit to download video(s) from.")
-        gets.add_argument("--filter", "-f", type=str, default="hot", help="The filtering option for a subreddit.")
-        gets.add_argument("--output", "-o", type=str, default="./", help="The output directory of the video(s).")
+        gets.add_argument("-f", "--filter", type=str, default="hot", help="The filtering option for a subreddit.")
+        gets.add_argument("-o", "--output", type=str, default="./", help="The output directory of the video(s).")
 
         args = parser.parse_args()
 
